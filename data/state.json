@@ -1,1 +1,6 @@
-{}
+{
+  "savedCities": [],
+  "visitedPois": [],
+  "cityNotes": {},
+  "lastCity": null
+}

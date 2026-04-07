@@ -3,43 +3,650 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>city visit adviser</title>
+<title>City Visit Adviser</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:-apple-system,BlinkMacSystemFont,sans-serif; background:#0d0d14; color:#e0e0e0; padding:20px; min-height:100vh; }
-h1 { font-size:20px; margin-bottom:8px; }
-p { color:#888; font-size:13px; margin-bottom:20px; }
-.card { background:#1a1a2e; border-radius:8px; padding:16px; margin-bottom:12px; border:1px solid #2a2a3e; }
-button { background:#4ecdc4; color:#0d0d14; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600; }
-button:hover { opacity:0.9; }
-input, textarea { width:100%; padding:8px; background:#13131f; border:1px solid #2a2a3e; border-radius:6px; color:#e0e0e0; font-size:13px; margin-bottom:8px; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg,#0d1117); color:var(--text,#c9d1d9); padding:16px; min-height:100vh; }
+
+h1 { font-size:18px; font-weight:700; color:var(--text,#c9d1d9); }
+.app-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.app-icon { font-size:24px; }
+.app-subtitle { font-size:12px; color:var(--text-dim,#8b949e); margin-top:2px; }
+
+/* Search */
+.search-wrap { position:relative; margin-bottom:16px; }
+.search-input { width:100%; padding:10px 40px 10px 14px; background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:10px; color:var(--text,#c9d1d9); font-size:14px; outline:none; transition:border-color .2s; }
+.search-input:focus { border-color:var(--teal,#4ecdc4); }
+.search-btn { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--teal,#4ecdc4); cursor:pointer; font-size:18px; padding:4px; }
+.autocomplete-list { position:absolute; top:100%; left:0; right:0; background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-top:none; border-radius:0 0 10px 10px; z-index:100; max-height:200px; overflow-y:auto; }
+.autocomplete-item { padding:10px 14px; cursor:pointer; font-size:13px; color:var(--text-dim,#8b949e); border-bottom:1px solid var(--border,#30363d); }
+.autocomplete-item:last-child { border-bottom:none; }
+.autocomplete-item:hover { background:var(--bg-card-hover,#1f2937); color:var(--text,#c9d1d9); }
+.autocomplete-item strong { color:var(--text,#c9d1d9); }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; margin-bottom:16px; background:var(--bg-card,#161b22); padding:4px; border-radius:10px; }
+.tab { flex:1; padding:7px; text-align:center; font-size:12px; font-weight:600; cursor:pointer; border-radius:7px; color:var(--text-dim,#8b949e); transition:all .2s; border:none; background:none; }
+.tab.active { background:var(--teal,#4ecdc4); color:#0d1117; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* City Header */
+.city-header { background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:12px; padding:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.city-name { font-size:20px; font-weight:700; }
+.city-meta { font-size:12px; color:var(--text-dim,#8b949e); margin-top:4px; }
+.fav-btn { background:none; border:1px solid var(--border,#30363d); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:16px; color:var(--text-dim,#8b949e); transition:all .2s; }
+.fav-btn.active { background:rgba(255,200,0,0.15); border-color:#ffc800; color:#ffc800; }
+
+/* Category Filter */
+.cat-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.cat-btn { padding:5px 12px; font-size:11px; font-weight:600; border:1px solid var(--border,#30363d); border-radius:20px; cursor:pointer; background:none; color:var(--text-dim,#8b949e); transition:all .2s; }
+.cat-btn.active { border-color:var(--teal,#4ecdc4); color:var(--teal,#4ecdc4); background:rgba(78,205,196,0.1); }
+
+/* POI Cards */
+.poi-grid { display:grid; gap:10px; }
+.poi-card { background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:10px; padding:14px; display:flex; gap:12px; align-items:flex-start; transition:border-color .2s; }
+.poi-card:hover { border-color:var(--teal,#4ecdc4); }
+.poi-emoji { font-size:22px; flex-shrink:0; width:36px; text-align:center; }
+.poi-info { flex:1; min-width:0; }
+.poi-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.poi-type { font-size:11px; color:var(--text-dim,#8b949e); margin-top:2px; }
+.poi-desc { font-size:11px; color:var(--text-dim,#8b949e); margin-top:4px; line-height:1.4; }
+.poi-actions { display:flex; gap:6px; margin-top:8px; }
+.poi-btn { padding:4px 10px; font-size:11px; border-radius:6px; cursor:pointer; border:1px solid var(--border,#30363d); background:none; color:var(--text-dim,#8b949e); transition:all .2s; }
+.poi-btn.visited { border-color:#4caf50; color:#4caf50; background:rgba(76,175,80,0.1); }
+.poi-btn.note-btn { border-color:var(--teal,#4ecdc4); color:var(--teal,#4ecdc4); }
+.poi-btn:hover { opacity:.8; }
+.visited-badge { font-size:10px; background:rgba(76,175,80,0.2); color:#4caf50; padding:2px 6px; border-radius:10px; }
+
+/* Loading */
+.loading { text-align:center; padding:40px 20px; color:var(--text-dim,#8b949e); }
+.loading-spinner { display:inline-block; width:24px; height:24px; border:2px solid var(--border,#30363d); border-top-color:var(--teal,#4ecdc4); border-radius:50%; animation:spin .7s linear infinite; margin-bottom:12px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Empty state */
+.empty-state { text-align:center; padding:40px 20px; color:var(--text-dim,#8b949e); }
+.empty-icon { font-size:40px; margin-bottom:12px; }
+.empty-text { font-size:13px; }
+
+/* Saved cities */
+.saved-list { display:grid; gap:8px; }
+.saved-city-card { background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:border-color .2s; }
+.saved-city-card:hover { border-color:var(--teal,#4ecdc4); }
+.saved-city-icon { font-size:20px; }
+.saved-city-name { font-size:13px; font-weight:600; }
+.saved-city-meta { font-size:11px; color:var(--text-dim,#8b949e); }
+.saved-city-remove { margin-left:auto; background:none; border:none; color:var(--text-dim,#8b949e); cursor:pointer; font-size:14px; padding:4px; }
+
+/* Notes */
+.notes-area { width:100%; min-height:80px; padding:10px; background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:8px; color:var(--text,#c9d1d9); font-size:13px; resize:vertical; outline:none; font-family:inherit; }
+.notes-area:focus { border-color:var(--teal,#4ecdc4); }
+.notes-label { font-size:12px; color:var(--text-dim,#8b949e); margin-bottom:6px; }
+.save-notes-btn { margin-top:8px; padding:7px 16px; background:var(--teal,#4ecdc4); color:#0d1117; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; }
+.save-notes-btn:hover { opacity:.9; }
+.note-saved-msg { font-size:11px; color:#4caf50; margin-top:6px; display:none; }
+
+/* Note modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:200; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:12px; padding:20px; width:100%; max-width:400px; }
+.modal-title { font-size:14px; font-weight:700; margin-bottom:12px; }
+.modal-close { float:right; background:none; border:none; color:var(--text-dim,#8b949e); cursor:pointer; font-size:18px; }
+.modal textarea { width:100%; padding:10px; background:var(--bg,#0d1117); border:1px solid var(--border,#30363d); border-radius:8px; color:var(--text,#c9d1d9); font-size:13px; min-height:100px; resize:vertical; font-family:inherit; outline:none; }
+.modal textarea:focus { border-color:var(--teal,#4ecdc4); }
+.modal-actions { display:flex; gap:8px; margin-top:12px; justify-content:flex-end; }
+.btn-primary { padding:8px 16px; background:var(--teal,#4ecdc4); color:#0d1117; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; }
+.btn-secondary { padding:8px 16px; background:none; border:1px solid var(--border,#30363d); color:var(--text-dim,#8b949e); border-radius:8px; font-size:12px; cursor:pointer; }
+
+/* Toast */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--teal,#4ecdc4); color:#0d1117; padding:8px 18px; border-radius:20px; font-size:12px; font-weight:700; z-index:300; opacity:0; transition:opacity .3s; pointer-events:none; }
+.toast.show { opacity:1; }
 </style>
 </head>
 <body>
-<h1>city visit adviser</h1>
-<p>Eine neue PulseOS App</p>
-<div class="card">
-  <p>Diese App wurde mit dem PulseOS App-Builder erstellt.</p>
-  <p style="margin-top:8px;">Bearbeite <code>apps/city-visit-adviser/index.html</code> um sie anzupassen.</p>
-</div>
-<script>
-// PulseOS SDK (automatisch verfuegbar):
-// PulseOS.saveState(data)     - Zustand speichern (PUT /app/city-visit-adviser/api/state)
-// PulseOS.loadState()         - Zustand laden (GET /app/city-visit-adviser/api/state)
-// PulseOS.emit(name, data)    - Output an Graph senden
-// PulseOS.onInput(name, cb)   - Input von Graph empfangen
-// PulseOS.onDataChanged(cb)   - Reagiere auf externe Datenänderungen
-// PulseOS.alert(msg)          - Zeige Alert in Agent-Bar
 
-// Graph-Integration: Empfange Daten von anderen Apps
+<div class="app-header">
+  <div class="app-icon">🏙️</div>
+  <div>
+    <h1>City Visit Adviser</h1>
+    <div class="app-subtitle">Entdecke Städte & plane deinen Besuch</div>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="search-wrap">
+  <input type="text" id="searchInput" class="search-input" placeholder="Stadt suchen... (z.B. Berlin, Paris, Tokyo)" autocomplete="off">
+  <button class="search-btn" id="searchBtn">🔍</button>
+  <div class="autocomplete-list" id="autocompleteList" style="display:none;"></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" data-tab="explore">🗺️ Erkunden</button>
+  <button class="tab" data-tab="visited">✅ Besucht</button>
+  <button class="tab" data-tab="saved">⭐ Gespeichert</button>
+</div>
+
+<!-- Explore Tab -->
+<div class="tab-content active" id="tab-explore">
+  <div id="explorePlaceholder" class="empty-state">
+    <div class="empty-icon">🌍</div>
+    <div class="empty-text">Suche nach einer Stadt um Empfehlungen zu sehen</div>
+  </div>
+  <div id="citySection" style="display:none;">
+    <div class="city-header">
+      <div>
+        <div class="city-name" id="cityTitle">—</div>
+        <div class="city-meta" id="cityMeta">—</div>
+      </div>
+      <button class="fav-btn" id="favBtn" title="Als Favorit speichern">⭐</button>
+    </div>
+
+    <div class="cat-filter" id="catFilter">
+      <button class="cat-btn active" data-cat="all">Alle</button>
+      <button class="cat-btn" data-cat="attraction">🏛️ Sehenswürdigkeiten</button>
+      <button class="cat-btn" data-cat="nature">🌿 Natur</button>
+      <button class="cat-btn" data-cat="food">🍽️ Essen</button>
+      <button class="cat-btn" data-cat="shopping">🛍️ Shopping</button>
+      <button class="cat-btn" data-cat="culture">🎭 Kultur</button>
+    </div>
+
+    <div id="poiLoading" class="loading" style="display:none;">
+      <div class="loading-spinner"></div>
+      <div>Lade Empfehlungen...</div>
+    </div>
+    <div class="poi-grid" id="poiGrid"></div>
+
+    <div style="margin-top:20px;">
+      <div class="notes-label">📝 Meine Notizen zu dieser Stadt</div>
+      <textarea class="notes-area" id="cityNotes" placeholder="Reisenotizen, Tipps, Eindrücke..."></textarea>
+      <button class="save-notes-btn" id="saveNotesBtn">Notizen speichern</button>
+      <div class="note-saved-msg" id="noteSavedMsg">✅ Notizen gespeichert</div>
+    </div>
+  </div>
+</div>
+
+<!-- Visited Tab -->
+<div class="tab-content" id="tab-visited">
+  <div id="visitedList" class="poi-grid"></div>
+  <div id="visitedEmpty" class="empty-state">
+    <div class="empty-icon">📍</div>
+    <div class="empty-text">Noch keine besuchten Orte. Markiere Orte beim Erkunden als besucht!</div>
+  </div>
+</div>
+
+<!-- Saved Tab -->
+<div class="tab-content" id="tab-saved">
+  <div id="savedList" class="saved-list"></div>
+  <div id="savedEmpty" class="empty-state">
+    <div class="empty-icon">⭐</div>
+    <div class="empty-text">Keine gespeicherten Städte. Klicke ⭐ bei einer Stadt um sie zu speichern!</div>
+  </div>
+</div>
+
+<!-- Note Modal -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-title" id="modalTitle">Notiz hinzufügen</div>
+    <textarea id="modalNote" placeholder="Deine Notiz zu diesem Ort..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Abbrechen</button>
+      <button class="btn-primary" id="modalSave">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="/sdk.js"></script>
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+let state = {
+  savedCities: [],     // [{name, country, lat, lon, savedAt}]
+  visitedPois: [],     // [{poiId, poiName, cityName, type, visitedAt, note}]
+  cityNotes: {},       // {cityName: "..."}
+  lastCity: null
+};
+
+let currentCity = null;
+let currentPois = [];
+let activeCategory = 'all';
+let noteModalPoiId = null;
+
+// ─── PulseOS SDK ─────────────────────────────────────────────────────────────
 if (window.PulseOS) {
   PulseOS.onInput('data', function(incoming) {
-    console.log('Received graph input:', incoming);
+    if (incoming && incoming.city) {
+      document.getElementById('searchInput').value = incoming.city;
+      searchCity(incoming.city);
+    }
   });
-  PulseOS.onDataChanged(function() {
-    console.log('Data changed externally, reloading...');
+  PulseOS.onDataChanged(function() { loadData(); });
+}
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const r = await fetch('/app/city-visit-adviser/api/state');
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.savedCities) {
+        state = { ...state, ...d };
+        renderSavedCities();
+        renderVisitedPois();
+      }
+    }
+  } catch(e) {}
+}
+
+async function saveData() {
+  try {
+    await fetch('/app/city-visit-adviser/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    if (window.PulseOS) PulseOS.emit('state', state);
+  } catch(e) {}
+}
+
+// ─── Search / Geocoding ───────────────────────────────────────────────────────
+let autocompleteTimeout = null;
+const searchInput = document.getElementById('searchInput');
+const autocompleteList = document.getElementById('autocompleteList');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  if (q.length < 2) { autocompleteList.style.display = 'none'; return; }
+  clearTimeout(autocompleteTimeout);
+  autocompleteTimeout = setTimeout(() => fetchAutocomplete(q), 300);
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { autocompleteList.style.display = 'none'; searchCity(searchInput.value.trim()); }
+  if (e.key === 'Escape') { autocompleteList.style.display = 'none'; }
+});
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  autocompleteList.style.display = 'none';
+  searchCity(searchInput.value.trim());
+});
+
+async function fetchAutocomplete(q) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&featuretype=city&q=${encodeURIComponent(q)}`;
+    const r = await fetch(url, { headers: { 'Accept-Language': 'de,en', 'User-Agent': 'PulseOS-CityAdviser/1.0' } });
+    const data = await r.json();
+    showAutocomplete(data.filter(d => ['city','town','village','municipality'].includes(d.type) || d.class === 'place'));
+  } catch(e) {}
+}
+
+function showAutocomplete(items) {
+  if (!items.length) { autocompleteList.style.display = 'none'; return; }
+  autocompleteList.innerHTML = items.map(item => {
+    const city = item.address.city || item.address.town || item.address.village || item.name;
+    const country = item.address.country || '';
+    const region = item.address.state || '';
+    return `<div class="autocomplete-item" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${escHtml(city)}" data-country="${escHtml(country)}" data-display="${escHtml(item.display_name)}">
+      <strong>${escHtml(city)}</strong>${region ? ', ' + escHtml(region) : ''}, ${escHtml(country)}
+    </div>`;
+  }).join('');
+  autocompleteList.style.display = 'block';
+  autocompleteList.querySelectorAll('.autocomplete-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const name = el.dataset.name;
+      const country = el.dataset.country;
+      const lat = parseFloat(el.dataset.lat);
+      const lon = parseFloat(el.dataset.lon);
+      searchInput.value = name;
+      autocompleteList.style.display = 'none';
+      loadCity({ name, country, lat, lon });
+    });
   });
 }
+
+async function searchCity(q) {
+  if (!q) return;
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&q=${encodeURIComponent(q)}`;
+    const r = await fetch(url, { headers: { 'Accept-Language': 'de,en', 'User-Agent': 'PulseOS-CityAdviser/1.0' } });
+    const data = await r.json();
+    if (!data.length) { showToast('Stadt nicht gefunden'); return; }
+    const item = data[0];
+    const city = item.address.city || item.address.town || item.address.village || item.name;
+    const country = item.address.country || '';
+    loadCity({ name: city, country, lat: parseFloat(item.lat), lon: parseFloat(item.lon) });
+  } catch(e) { showToast('Fehler beim Laden'); }
+}
+
+// ─── City & POIs ──────────────────────────────────────────────────────────────
+const POI_CATEGORIES = {
+  attraction: { label: 'Sehenswürdigkeit', emoji: '🏛️', tags: 'tourism=attraction|tourism=museum|tourism=monument|historic=castle|historic=memorial|amenity=place_of_worship' },
+  nature: { label: 'Natur & Parks', emoji: '🌿', tags: 'leisure=park|leisure=garden|natural=wood|leisure=nature_reserve' },
+  food: { label: 'Restaurant', emoji: '🍽️', tags: 'amenity=restaurant|amenity=cafe|amenity=bar' },
+  shopping: { label: 'Shopping', emoji: '🛍️', tags: 'shop=mall|amenity=marketplace|shop=department_store' },
+  culture: { label: 'Kultur', emoji: '🎭', tags: 'amenity=theatre|amenity=cinema|amenity=library|amenity=arts_centre|tourism=gallery' }
+};
+
+async function loadCity(city) {
+  currentCity = city;
+  activeCategory = 'all';
+
+  document.getElementById('explorePlaceholder').style.display = 'none';
+  document.getElementById('citySection').style.display = 'block';
+  document.getElementById('cityTitle').textContent = city.name;
+  document.getElementById('cityMeta').textContent = city.country + ' · ' + city.lat.toFixed(2) + '°N ' + city.lon.toFixed(2) + '°E';
+
+  // Update fav button
+  const isFav = state.savedCities.some(c => c.name === city.name);
+  const favBtn = document.getElementById('favBtn');
+  favBtn.classList.toggle('active', isFav);
+
+  // Load notes
+  document.getElementById('cityNotes').value = state.cityNotes[city.name] || '';
+
+  // Update cat filter
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === 'all'));
+
+  // Switch to explore tab
+  switchTab('explore');
+
+  // Load POIs
+  await loadPois(city);
+
+  state.lastCity = city;
+  saveData();
+}
+
+async function loadPois(city) {
+  document.getElementById('poiLoading').style.display = 'block';
+  document.getElementById('poiGrid').innerHTML = '';
+
+  try {
+    const radius = 5000;
+    const queries = Object.entries(POI_CATEGORIES).map(([cat, cfg]) => {
+      const filters = cfg.tags.split('|').map(t => {
+        const [k, v] = t.split('=');
+        return `node["${k}"="${v}"](around:${radius},${city.lat},${city.lon});`;
+      }).join('');
+      return `(${filters});`;
+    });
+    const overpassQuery = `[out:json][timeout:25];(${queries.join('')});out 50;`;
+    const url = 'https://overpass-api.de/api/interpreter';
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(overpassQuery)
+    });
+    const data = await r.json();
+
+    const pois = [];
+    const seen = new Set();
+    for (const el of (data.elements || [])) {
+      const name = el.tags && (el.tags.name || el.tags['name:de'] || el.tags['name:en']);
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      const cat = detectCategory(el.tags);
+      const catInfo = POI_CATEGORIES[cat] || { emoji: '📍', label: 'Ort' };
+      pois.push({
+        id: `${el.id}`,
+        name,
+        type: catInfo.label,
+        cat,
+        emoji: catInfo.emoji,
+        desc: el.tags.description || el.tags.wikipedia ? 'Wikipedia verfügbar' : ''
+      });
+    }
+    currentPois = pois;
+  } catch(e) {
+    currentPois = getFallbackPois(city.name);
+  }
+
+  document.getElementById('poiLoading').style.display = 'none';
+  renderPois();
+}
+
+function detectCategory(tags) {
+  if (!tags) return 'attraction';
+  const t = JSON.stringify(tags);
+  if (/park|garden|wood|nature_reserve/.test(t)) return 'nature';
+  if (/restaurant|cafe|bar/.test(t)) return 'food';
+  if (/mall|marketplace|department_store/.test(t)) return 'shopping';
+  if (/theatre|cinema|library|arts_centre|gallery/.test(t)) return 'culture';
+  return 'attraction';
+}
+
+function getFallbackPois(cityName) {
+  return [
+    { id: 'fb1', name: `${cityName} Altstadt`, type: 'Sehenswürdigkeit', cat: 'attraction', emoji: '🏛️', desc: 'Historisches Stadtzentrum' },
+    { id: 'fb2', name: `${cityName} Hauptmarkt`, type: 'Sehenswürdigkeit', cat: 'attraction', emoji: '🏛️', desc: 'Zentraler Marktplatz' },
+    { id: 'fb3', name: `${cityName} Stadtpark`, type: 'Natur & Parks', cat: 'nature', emoji: '🌿', desc: 'Großer Stadtpark' },
+    { id: 'fb4', name: `${cityName} Museum`, type: 'Kultur', cat: 'culture', emoji: '🎭', desc: 'Städtisches Museum' },
+  ];
+}
+
+function renderPois() {
+  const grid = document.getElementById('poiGrid');
+  const filtered = activeCategory === 'all' ? currentPois : currentPois.filter(p => p.cat === activeCategory);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Keine Orte in dieser Kategorie gefunden</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.slice(0, 40).map(poi => {
+    const visited = state.visitedPois.find(v => v.poiId === poi.id);
+    const hasNote = visited && visited.note;
+    return `<div class="poi-card" data-id="${escHtml(poi.id)}">
+      <div class="poi-emoji">${poi.emoji}</div>
+      <div class="poi-info">
+        <div class="poi-name">${escHtml(poi.name)}</div>
+        <div class="poi-type">${escHtml(poi.type)} ${visited ? '<span class="visited-badge">✅ Besucht</span>' : ''}</div>
+        ${poi.desc ? `<div class="poi-desc">${escHtml(poi.desc)}</div>` : ''}
+        ${hasNote ? `<div class="poi-desc">💬 ${escHtml(visited.note)}</div>` : ''}
+        <div class="poi-actions">
+          <button class="poi-btn ${visited ? 'visited' : ''}" onclick="toggleVisited('${escHtml(poi.id)}','${escHtml(poi.name)}','${poi.cat}')">${visited ? '✅ Besucht' : '📍 Als besucht markieren'}</button>
+          <button class="poi-btn note-btn" onclick="openNoteModal('${escHtml(poi.id)}','${escHtml(poi.name)}')">✏️ Notiz</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Interactions ─────────────────────────────────────────────────────────────
+function toggleVisited(poiId, poiName, cat) {
+  const idx = state.visitedPois.findIndex(v => v.poiId === poiId);
+  if (idx >= 0) {
+    state.visitedPois.splice(idx, 1);
+    showToast('Entfernt aus Besucht');
+  } else {
+    state.visitedPois.push({
+      poiId, poiName,
+      cityName: currentCity ? currentCity.name : '',
+      type: cat,
+      visitedAt: new Date().toISOString(),
+      note: ''
+    });
+    showToast('✅ Als besucht markiert!');
+  }
+  saveData();
+  renderPois();
+  renderVisitedPois();
+}
+
+function openNoteModal(poiId, poiName) {
+  noteModalPoiId = poiId;
+  const existing = state.visitedPois.find(v => v.poiId === poiId);
+  document.getElementById('modalTitle').textContent = '✏️ Notiz: ' + poiName;
+  document.getElementById('modalNote').value = existing ? existing.note || '' : '';
+  document.getElementById('noteModal').classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+document.getElementById('noteModal').addEventListener('click', e => { if (e.target === document.getElementById('noteModal')) closeModal(); });
+
+function closeModal() {
+  document.getElementById('noteModal').classList.remove('open');
+  noteModalPoiId = null;
+}
+
+document.getElementById('modalSave').addEventListener('click', () => {
+  if (!noteModalPoiId) return;
+  const note = document.getElementById('modalNote').value.trim();
+  let poi = state.visitedPois.find(v => v.poiId === noteModalPoiId);
+  if (!poi) {
+    const found = currentPois.find(p => p.id === noteModalPoiId);
+    poi = { poiId: noteModalPoiId, poiName: found ? found.name : noteModalPoiId, cityName: currentCity ? currentCity.name : '', type: '', visitedAt: new Date().toISOString(), note };
+    state.visitedPois.push(poi);
+  } else {
+    poi.note = note;
+  }
+  saveData();
+  renderPois();
+  renderVisitedPois();
+  closeModal();
+  showToast('Notiz gespeichert');
+});
+
+// Category filter
+document.getElementById('catFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  activeCategory = btn.dataset.cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b === btn));
+  renderPois();
+});
+
+// Favorite
+document.getElementById('favBtn').addEventListener('click', () => {
+  if (!currentCity) return;
+  const idx = state.savedCities.findIndex(c => c.name === currentCity.name);
+  if (idx >= 0) {
+    state.savedCities.splice(idx, 1);
+    document.getElementById('favBtn').classList.remove('active');
+    showToast('Aus Favoriten entfernt');
+  } else {
+    state.savedCities.push({ ...currentCity, savedAt: new Date().toISOString() });
+    document.getElementById('favBtn').classList.add('active');
+    showToast('⭐ Zu Favoriten hinzugefügt!');
+  }
+  saveData();
+  renderSavedCities();
+});
+
+// City notes
+document.getElementById('saveNotesBtn').addEventListener('click', () => {
+  if (!currentCity) return;
+  state.cityNotes[currentCity.name] = document.getElementById('cityNotes').value;
+  saveData();
+  const msg = document.getElementById('noteSavedMsg');
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 2000);
+});
+
+// ─── Render helpers ──────────────────────────────────────────────────────────
+function renderVisitedPois() {
+  const list = document.getElementById('visitedList');
+  const empty = document.getElementById('visitedEmpty');
+  if (!state.visitedPois.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = state.visitedPois.slice().reverse().map(v => {
+    const catInfo = POI_CATEGORIES[v.type] || { emoji: '📍' };
+    return `<div class="poi-card">
+      <div class="poi-emoji">${catInfo.emoji}</div>
+      <div class="poi-info">
+        <div class="poi-name">${escHtml(v.poiName)}</div>
+        <div class="poi-type">${escHtml(v.cityName)} · ${new Date(v.visitedAt).toLocaleDateString('de')}</div>
+        ${v.note ? `<div class="poi-desc">💬 ${escHtml(v.note)}</div>` : ''}
+        <div class="poi-actions">
+          <button class="poi-btn" onclick="removeVisited('${escHtml(v.poiId)}')">🗑️ Entfernen</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeVisited(poiId) {
+  state.visitedPois = state.visitedPois.filter(v => v.poiId !== poiId);
+  saveData();
+  renderVisitedPois();
+  if (currentPois.some(p => p.id === poiId)) renderPois();
+}
+
+function renderSavedCities() {
+  const list = document.getElementById('savedList');
+  const empty = document.getElementById('savedEmpty');
+  if (!state.savedCities.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  const reversed = state.savedCities.slice().reverse();
+  list.innerHTML = reversed.map((c, i) => `
+    <div class="saved-city-card" data-city-idx="${i}">
+      <div class="saved-city-icon">🏙️</div>
+      <div>
+        <div class="saved-city-name">${escHtml(c.name)}</div>
+        <div class="saved-city-meta">${escHtml(c.country)} · Gespeichert ${new Date(c.savedAt).toLocaleDateString('de')}</div>
+      </div>
+      <button class="saved-city-remove" data-remove="${escHtml(c.name)}" title="Entfernen">✕</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('.saved-city-card').forEach((el, i) => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.saved-city-remove')) return;
+      loadCity(reversed[i]);
+    });
+    const removeBtn = el.querySelector('.saved-city-remove');
+    if (removeBtn) removeBtn.addEventListener('click', e => { e.stopPropagation(); removeCity(removeBtn.dataset.remove); });
+  });
+}
+
+function removeCity(name) {
+  state.savedCities = state.savedCities.filter(c => c.name !== name);
+  saveData();
+  renderSavedCities();
+  if (currentCity && currentCity.name === name) {
+    document.getElementById('favBtn').classList.remove('active');
+  }
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── Escape HTML ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadData();
 </script>
 </body>
 </html>

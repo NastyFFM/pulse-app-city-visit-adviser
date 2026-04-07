@@ -1,22 +1,14 @@
 {
-  "name": "city visit adviser",
-  "icon": "C",
-  "color": "#1a2a3a",
-  "description": "",
+  "name": "City Visit Adviser",
+  "icon": "🏙️",
+  "color": "#1a3a4a",
+  "description": "Entdecke Städte, finde Sehenswürdigkeiten und plane deinen Besuch mit lokalen Empfehlungen",
   "inputs": [
-    {
-      "id": "data",
-      "desc": "Beliebige Daten empfangen"
-    }
+    { "id": "data", "desc": "Stadtname oder Koordinaten empfangen" }
   ],
   "outputs": [
-    {
-      "id": "state",
-      "desc": "Aktueller App-Zustand"
-    }
+    { "id": "state", "desc": "Gespeicherte Städte, Besuche und Notizen" }
   ],
-  "dataFiles": [
-    "state"
-  ],
+  "dataFiles": ["state"],
   "pulseSubscriptions": []
 }
