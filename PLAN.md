@@ -1,7 +1,7 @@
 # Plan: City Visit Adviser
 
 created: 2026-04-07T13:35:00Z
-status: active
+status: done
 app_id: city-visit-adviser
 app_dir: /Users/chris.pohl/Documents/GitHub/pulse-app-city-visit-adviser/
 standalone: true
@@ -33,7 +33,7 @@ Eine App die Nutzern hilft, Städtebesuche zu planen. Nutzer können eine Stadt 
       complexity: low
 
 ### Phase 2 — Features
-- [ ] TASK-002: Vollständige index.html mit Stadt-Suche, Empfehlungen, Besuchsliste
+- [x] TASK-002: Vollständige index.html mit Stadt-Suche, Empfehlungen, Besuchsliste
       assigned_to: code-generator
       depends_on: TASK-001
       files: [index.html, manifest.json, data/state.json]
